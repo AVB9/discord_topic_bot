@@ -8,12 +8,26 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write       # Required to push changes back to the repository
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - run: pip install -r requirements.txt
-      - run: python main.py
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
+      - name: Run script
+        run: python main.py
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          
+      - name: Commit updated JSON files
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/*.json
+          git commit -m "chore: update daily topics state" || echo "No changes to commit"
+          git push
